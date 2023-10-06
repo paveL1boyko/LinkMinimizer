@@ -1,0 +1,51 @@
+version: "3.9"
+
+
+x-env: &env
+  env_file:
+    - ./src/.env
+
+
+services:
+
+  app:
+    <<:  *env
+    image: link_minimizer:latest
+    container_name: backed
+    command: bash -c "poetry run uvicorn app.frameworks_and_drivers.asgi:app
+      --uds /tmp/app/app.sock
+      --workers 4
+      --timeout-keep-alive 60
+      --log-level info"
+    volumes:
+      - app_socket:/tmp/app/
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    logging:
+      driver: none
+
+  redis:
+    image: redis:7.2.1-alpine
+    container_name: local_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    logging:
+      driver: none
+
+volumes:
+  app_socket:
+  mongo_data:

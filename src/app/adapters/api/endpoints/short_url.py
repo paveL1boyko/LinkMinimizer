@@ -1,3 +1,5 @@
+import logging
+
 from app.adapters.cache.redis_cache import delete_cache_key
 from app.adapters.db.mongo_db.short_url_repository import MotorMongoShortURLRepository
 from app.core.config import Config
@@ -15,6 +17,8 @@ from fastapi_cache.decorator import cache
 
 from .error_messages import ERROR_SHORT_CODE_CONFLICT, ERROR_SHORT_URL_NOT_FOUND
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/short_url")
 
 
@@ -23,7 +27,7 @@ def get_use_case() -> ShortURLUseCase:
     from app.frameworks_and_drivers.asgi import short_link_collection
 
     return ShortURLUseCase(
-        MotorMongoShortURLRepository(collections=short_link_collection)
+        MotorMongoShortURLRepository(collection=short_link_collection)
     )
 
 
@@ -37,8 +41,10 @@ async def create_short_url(
 ):
     """Generate and store a short URL for the given long URL."""
     try:
+        logger.info(f"Generating short URL for {payload.long_url}")
         return await repo.create(ShortURLEntity(**payload.model_dump()))
     except DuplicateEntityError:
+        logging.error("Short code conflict. Unable to generate a unique short code.")
         raise HTTPException(
             status_code=409,
             detail="Short code conflict. Unable to generate a unique short code.",
@@ -57,6 +63,7 @@ async def get_long_url(
     """Retrieve the original URL for the given short code."""
     short_url_data = await use_case.get_by_short_code(short_code=short_code)
     if not short_url_data:
+        logger.error(f"Short URL not found for code {short_code}")
         raise HTTPException(status_code=404, detail=ERROR_SHORT_URL_NOT_FOUND)
     return short_url_data
 
@@ -75,6 +82,7 @@ async def redirect_to_long_url(
         short_code=short_code,
     )
     if not url:
+        logger.error(f"Short URL not found for code {short_code}")
         raise HTTPException(status_code=404, detail=ERROR_SHORT_URL_NOT_FOUND)
     await use_case.update_click_count(short_code)
     return RedirectResponse(url=f"/get_long_url/{short_code}")
@@ -91,5 +99,6 @@ async def get_click_count(
     """Retrieve the click count for the given short code."""
     url = await use_case.get_by_short_code(short_code=short_code)
     if not url:
+        logger.error(f"Short URL not found for code {short_code}")
         raise HTTPException(status_code=404, detail=ERROR_SHORT_URL_NOT_FOUND)
     return ClickCountResponse(**(url if isinstance(url, dict) else url.model_dump()))

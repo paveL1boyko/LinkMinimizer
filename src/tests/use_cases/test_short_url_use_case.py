@@ -5,8 +5,6 @@ from app.core.errors import DuplicateEntityError
 from app.entities.short_url.short_url_entity import ShortURLEntity
 from use_cases.test_factory_entity_short_url import ShortURLEntityFactory
 
-# Fixture for creating an instance of ShortURLUseCase
-
 
 @pytest.mark.asyncio
 async def test_create_short_url_success(use_case):

@@ -166,6 +166,12 @@ class TestShortURL:
 
     @pytest.mark.asyncio
     async def test_create_short_url_duplicate_error(self, async_client):
+        """
+        Test creating a short URL with a duplicate code.
+
+        This test simulates the scenario where creating a short URL results
+        in a DuplicateEntityError.
+        """
         request_data: URLPayload = URLPayloadFactory.build()
         with patch(
             "app.use_cases.short_url_use_case.ShortURLUseCase.create",

@@ -18,12 +18,17 @@ from app.frameworks_and_drivers.asgi import app, startup_event
 from fastapi_cache import FastAPICache
 
 
-@pytest_asyncio.fixture
-async def async_client(mongo_collection):
+@pytest_asyncio.fixture(scope="session")
+async def _async_client(event_loop):
     await startup_event()
     async with httpx.AsyncClient(app=app, base_url="http://test") as client:
         yield client
-        FastAPICache.reset()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def async_client(_async_client):
+    yield _async_client
+    await FastAPICache.clear()
 
 
 class TestShortURL:

@@ -6,23 +6,30 @@ from app.adapters.db.mongo_db.short_url_repository import MotorMongoShortURLRepo
 from app.use_cases.short_url_use_case import ShortURLUseCase
 
 
-@pytest_asyncio.fixture
-async def mongo_collection():
-    """
-    Async pytest fixture to provide a MongoDB collection for testing.
-    This fixture initializes a connection to the MongoDB, yields the database,
-    and then drops all collections in the database after the test is completed.
-    """
+@pytest.fixture(scope="session")
+def event_loop():
+    from asyncio import new_event_loop
 
+    loop = new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest_asyncio.fixture(scope="session")
+async def mongo_client(event_loop):
     init_redis_cache()
+    client, db, short_link_collection = await init_short_url_db()
+    yield client, db, short_link_collection
+    client.close()
 
-    client, db, collection = await init_short_url_db()
-    yield collection
 
+@pytest_asyncio.fixture(scope="function")
+async def mongo_collection(mongo_client):
+    client, db, short_link_collection = mongo_client
+    yield short_link_collection
     collections = await db.list_collection_names()
     for collection in collections:
         await db.drop_collection(collection)
-    client.close()
 
 
 @pytest.fixture
@@ -35,10 +42,9 @@ def short_url_repository(mongo_collection):
 
 
 @pytest.fixture
-def use_case(mongo_collection):
+def short_url_use_case(short_url_repository):
     """
     Pytest fixture to create an instance of ShortURLUseCase with a repository
     initialized with the test MongoDB collection.
     """
-    repo = MotorMongoShortURLRepository(collection=mongo_collection)
-    return ShortURLUseCase(repo=repo)
+    return ShortURLUseCase(repo=short_url_repository)

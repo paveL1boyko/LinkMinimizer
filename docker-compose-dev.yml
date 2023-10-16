@@ -34,8 +34,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    logging:
-      driver: none
+#    logging:
+#      driver: none
 
   redis:
     image: redis:7.2.1-alpine

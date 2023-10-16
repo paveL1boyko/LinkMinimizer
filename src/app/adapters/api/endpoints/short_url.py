@@ -1,6 +1,7 @@
 import logging
 
 from app.adapters.cache.redis_cache import delete_cache_key
+from app.adapters.db.mongo_db import get_short_link_collection
 from app.adapters.db.mongo_db.short_url_repository import MotorMongoShortURLRepository
 from app.core.config import Config
 from app.core.errors import DuplicateEntityError
@@ -14,6 +15,7 @@ from app.use_cases.short_url_use_case import ShortURLUseCase
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi_cache.decorator import cache
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from .error_messages import ERROR_SHORT_CODE_CONFLICT, ERROR_SHORT_URL_NOT_FOUND
 
@@ -22,10 +24,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/short_url")
 
 
-def get_use_case() -> ShortURLUseCase:
-    """Get an instance of the repository."""
-    from app.frameworks_and_drivers.asgi import short_link_collection
-
+def get_use_case(
+    short_link_collection: AsyncIOMotorCollection = Depends(get_short_link_collection),
+) -> ShortURLUseCase:
     return ShortURLUseCase(
         MotorMongoShortURLRepository(collection=short_link_collection)
     )

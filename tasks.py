@@ -18,3 +18,11 @@ def local_dev(ctx):
     ctx.run(
         "docker-compose -f docker-compose-base.yml -f docker-compose-dev.yml up -d --remove-orphans"
     )
+
+
+@task(pre=[build_images])
+def test_full(ctx):
+    ctx.run(
+        "docker-compose -f docker-compose-dev.yml "
+        "-f docker-compose-test.yml up --abort-on-container-exit"
+    )

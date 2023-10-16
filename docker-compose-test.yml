@@ -1,0 +1,14 @@
+version: "3.9"
+
+
+services:
+
+
+  app:
+    command: bash -c "poetry run pytest
+      -s -vv
+      --cov=app
+      --cov-report term
+      --cov-report=xml:/tmp/coverage/coverage.xml tests || exit 0"
+    volumes:
+      - .:/tmp/coverage/

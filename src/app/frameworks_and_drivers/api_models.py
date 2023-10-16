@@ -1,8 +1,4 @@
-import logging
-
 from pydantic import BaseModel, Field
-
-logging.basicConfig(level=logging.INFO)
 
 
 class URLPayload(BaseModel):

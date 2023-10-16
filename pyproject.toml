@@ -45,8 +45,12 @@ pytest-cov = "^4.1.0"
 pre-commit = "^3.4.0"
 ruff = "^0.0.292"
 black = "^23.9.1"
+mypy = "^1.6.0"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+mypy_path = "src/"

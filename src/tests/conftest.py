@@ -61,17 +61,17 @@ async def clean_mongo_collection(mongo_collection) -> None:
 
 
 @pytest.fixture
-def short_url_repository(mongo_collection) -> MotorMongoShortURLRepository:
+def short_url_repository_fixture(mongo_collection) -> MotorMongoShortURLRepository:
     """Initialize and yield Short URL repository."""
     logging.info("Initializing Short URL repository...")
     return MotorMongoShortURLRepository(collection=mongo_collection)
 
 
 @pytest.fixture
-def short_url_use_case(short_url_repository) -> ShortURLUseCase:
+def short_url_use_case_fixture(short_url_repository_fixture) -> ShortURLUseCase:
     """Initialize and yield Short URL use case."""
     logging.info("Initializing Short URL use case...")
-    return ShortURLUseCase(repo=short_url_repository)
+    return ShortURLUseCase(repo=short_url_repository_fixture)
 
 
 @pytest.fixture(scope="session")
